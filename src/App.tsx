@@ -14,9 +14,14 @@ function App() {
   }
 
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-      <Button>D APk</Button>
+    <div className="container mx-auto">
+      <h1>OneKey HackerApk</h1>
+      <div className="flex flex-col">
+        <div>
+          <Button onClick={greet}>Click Me</Button>
+        </div>
+        <div>{greetMsg}</div>
+      </div>
     </div>
   );
 }

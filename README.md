@@ -1,6 +1,6 @@
-# Tauri + React + Typescript
+# Android Hacker
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A android tool
 
 ## UI Component 
 - shadcn-ui

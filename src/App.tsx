@@ -1,65 +1,61 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { open } from "@tauri-apps/api/dialog";
-// import "./App.css";
-
-import { useForm } from "react-hook-form"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
+import { Label } from "./components/ui/label";
 
 
 function App() {
-   // 1. Define your form.
-  const form = useForm({
-    // resolver: zodResolver(formSchema),
-    defaultValues: {
-      apkFilePath: "",
-    },
-  })
- 
+  const { toast } = useToast()
+  const [apkPath, setApkPath] = useState<string | string[] | null>(null);
+
+
   // 2. Define a submit handler.
-  const onSubmit = async (values: any) => {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-    const { apkFilePath } = values;
-      const url = convertFileSrc(apkFilePath);
-         console.log(url);
-    await invoke("decompileApk", { path:apkFilePath })
+  const onSubmit = async () => {
+    if (!apkPath)
+      return;
+    const exitCode = await invoke("decompileApk", { path: apkPath });
+    if (exitCode) {
+      toast({
+        variant: "destructive",
+        description: `执行失败，错误代码${exitCode}`,
+      });
+    } else {
+      toast({
+        description: `执行完成，路径位于${apkPath}目录下.`,
+      });
+      setApkPath(null);
+    }
   }
 
   return (
     <div className="container mx-auto">
-       <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="apkFilePath"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Choose APK</FormLabel>
-              <FormControl>
-                <Input type="file"  onChange={(e) => { field.onChange(e.target.files) }} />
-              </FormControl>
-              <FormDescription>
-                Choose your apk file path to decompile.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+      <div className="flex flex-col">
+        <div className="mb-2">
+          <Label>APK反编译工具</Label>
+        </div>
+        <div className="flex w-full mx-auto items-center space-x-2 mb-2">
+          <Input className="flex-1" value={apkPath || ""} placeholder="请选择要反编译的apk文件" disabled />
+          <Button variant="outline" onClick={async () => {
+            // Open a selection dialog for image files
+            const selected = await open({
+              filters: [{
+                name: 'APK',
+                extensions: ['apk']
+              }]
+            });
+            if (selected === null) {
+              return;
+            }
+            setApkPath(selected);
+          }} >选择APK文件</Button>
+        </div>
+        <div>
+          <Button onClick={onSubmit}>开始反编译</Button>
+        </div>
+      </div>
     </div>
   );
 }
